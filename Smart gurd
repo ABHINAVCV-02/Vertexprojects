@@ -1,0 +1,19 @@
+
+const int tiltSensorPin = 8; 
+const int alertPin = 3;    
+void setup() {
+  Serial.begin(9600);
+  pinMode(tiltSensorPin, INPUT);
+  pinMode(alertPin, OUTPUT);
+  digitalWrite(alertPin, 1);
+}
+void loop() {
+  int tiltState = digitalRead(tiltSensorPin);
+  if (tiltState == 0) {
+    Serial.println("Fall Detected!");
+    digitalWrite(alertPin, HIGH); 
+  } else {
+    digitalWrite(alertPin, 0); 
+  }
+  delay(2000); 
+}
