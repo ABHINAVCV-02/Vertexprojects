@@ -1,0 +1,83 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+// LCD on hardware I2C (A4/A5)
+LiquidCrystal_I2C lcd(0x27, 16, 2); // adjust 0x27 if your backpack uses another address
+// TCS230 Pin connections
+#define S0 4
+#define S1 5
+#define S2 6
+#define S3 7
+#define sensorOut 8
+
+unsigned long redFrequency, greenFrequency, blueFrequency;
+
+void setup() {
+  Serial.begin(9600);
+
+  // Start hardware I2C
+  Wire.begin();
+
+  // Initialize LCD — many LiquidCrystal_I2C libs use init() not begin()
+  lcd.init();        // initialize the display (use lcd.begin(16,2) if your lib requires it)
+  lcd.backlight();
+
+  // Setup TCS230 pins
+  pinMode(S0, OUTPUT);
+  pinMode(S1, OUTPUT);
+  pinMode(S2, OUTPUT);
+  pinMode(S3, OUTPUT);
+  pinMode(sensorOut, INPUT);
+
+  // Set TCS230 frequency scaling to 20%
+  digitalWrite(S0, HIGH);
+  digitalWrite(S1, LOW);
+
+  lcd.setCursor(0, 0);
+  lcd.print("TCS230 + LCD");
+  lcd.setCursor(0, 1);
+  lcd.print("Initializing...");
+  delay(1500);
+  lcd.clear();
+}
+
+void loop() {
+  // RED
+  digitalWrite(S2, LOW);
+  digitalWrite(S3, LOW);
+  redFrequency = pulseIn(sensorOut, LOW);
+
+  // GREEN
+  digitalWrite(S2, HIGH);
+  digitalWrite(S3, HIGH);
+  greenFrequency = pulseIn(sensorOut, LOW);
+
+  // BLUE
+  digitalWrite(S2, LOW);
+  digitalWrite(S3, HIGH);
+  blueFrequency = pulseIn(sensorOut, LOW);
+
+  // Convert to 0–255 values (tweak map ranges if needed)
+  int redValue = map(redFrequency, 25, 70, 255, 0);
+  int greenValue = map(greenFrequency, 30, 90, 255, 0);
+  int blueValue = map(blueFrequency, 25, 70, 255, 0);
+
+  redValue = constrain(redValue, 0, 255);
+  greenValue = constrain(greenValue, 0, 255);
+  blueValue = constrain(blueValue, 0, 255);
+
+  // Display values
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("R:"); lcd.print(redValue);
+  lcd.print(" G:"); lcd.print(greenValue);
+  lcd.setCursor(0, 1);
+  lcd.print("B:"); lcd.print(blueValue);
+
+  // Serial Monitor
+  Serial.print("R: "); Serial.print(redValue);
+  Serial.print(" G: "); Serial.print(greenValue);
+  Serial.print(" B: "); Serial.println(blueValue);
+
+  delay(800);
+}
